@@ -16,7 +16,7 @@ st.write("Prends une photo ou upload une image pour identifier un composant.")
 # === Téléchargement du modèle si absent ===
 MODEL_PATH = "model_composants.h5"
 GDRIVE_FILE_ID = "1sHbmE0P2rAHRI9LukMn1DzEf16UtphZo"
-DOWNLOAD_URL = f"https://drive.google.com/uc?id={1sHbmE0P2rAHRI9LukMn1DzEf16UtphZo}"
+DOWNLOAD_URL = f"https://drive.google.com/uc?id={DGRIVE_FILE_ID}"
 
 if not os.path.exists(MODEL_PATH):
     with st.spinner("Téléchargement du modèle depuis Google Drive..."):
