@@ -1,5 +1,7 @@
 # app.py - Streamlit App de reconnaissance de composants électroniques
 
+import os
+import gdown
 import streamlit as st
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.image import img_to_array
@@ -11,10 +13,19 @@ st.set_page_config(page_title="Reconnaissance de composants", layout="centered")
 st.title("🔍 Reconnaissance de composants électroniques")
 st.write("Prends une photo ou upload une image pour identifier un composant.")
 
+# === Téléchargement du modèle si absent ===
+MODEL_PATH = "model_composants.h5"
+GDRIVE_FILE_ID = "YOUR_FILE_ID_HERE"
+DOWNLOAD_URL = f"https://drive.google.com/uc?id={GDRIVE_FILE_ID}"
+
+if not os.path.exists(MODEL_PATH):
+    with st.spinner("Téléchargement du modèle depuis Google Drive..."):
+        gdown.download(DOWNLOAD_URL, MODEL_PATH, quiet=False)
+
 # === Chargement du modèle ===
 @st.cache_resource
 def load_my_model():
-    return load_model("model_composants.h5")
+    return load_model(MODEL_PATH)
 
 model = load_my_model()
 classes = ["diode", "resistance", "condensateur"]  # à adapter si besoin
