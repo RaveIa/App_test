@@ -45,20 +45,15 @@ descriptions = {
     "ultrasonic_sensor": "Un capteur à ultrasons mesure les distances grâce au son."
 }
 
-# === Réinitialisation via bouton
-if st.button("🔄 Réinitialiser la photo"):
-    st.session_state["camera"] = None
-    st.session_state["uploaded"] = None
-    st.experimental_rerun()
-
 # === Formulaire d'upload et caméra
 with st.form("image_form"):
     col1, col2 = st.columns(2)
     with col1:
         uploaded = st.file_uploader("Uploader une image", type=["jpg", "png"], key="uploaded")
     with col2:
-        camera = st.camera_input("Ou prends une photo", key="camera")
-    
+        # Back camera hint (some browsers respect it)
+        camera = st.camera_input("Ou prends une photo", key="camera", help="Utiliser la caméra arrière si possible 📷")
+
     submit = st.form_submit_button("Analyser")
 
 # === Traitement et prédiction
@@ -80,8 +75,11 @@ if submit:
             predicted_class = classes[np.argmax(prediction)]
             confidence = float(np.max(prediction) * 100)
 
-            st.success(f"Composant identifié : **{predicted_class}** ({confidence:.2f}%)")
-            st.info(f"Description : {descriptions.get(predicted_class, 'Non disponible.')}")
+            if confidence < 70:
+                st.warning("❌ Composant non reconnu avec certitude.")
+            else:
+                st.success(f"Composant identifié : **{predicted_class}** ({confidence:.2f}%)")
+                st.info(f"Description : {descriptions.get(predicted_class, 'Non disponible.')}")
         except Exception as e:
             st.error("Erreur pendant la prédiction :")
             st.code(str(e))
