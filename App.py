@@ -18,23 +18,31 @@ MODEL_PATH = "model_composants.h5"
 GDRIVE_FILE_ID = "1sHbmE0P2rAHRI9LukMn1DzEf16UtphZo"
 DOWNLOAD_URL = f"https://drive.google.com/uc?id={GDRIVE_FILE_ID}"
 
-if not os.path.exists(MODEL_PATH):
-    with st.spinner("Téléchargement du modèle depuis Google Drive..."):
-        gdown.download(DOWNLOAD_URL, MODEL_PATH, quiet=False)
-
-# === Chargement du modèle ===
 @st.cache_resource
-def load_my_model():
+def download_model():
+    if not os.path.exists(MODEL_PATH):
+        with st.spinner("Téléchargement du modèle depuis Google Drive..."):
+            gdown.download(DOWNLOAD_URL, MODEL_PATH, quiet=False)
     return load_model(MODEL_PATH)
 
-model = load_my_model()
-classes = ["led", "potentiometer", "push_button","resistor","ultrasonic_sensor"]  # à adapter si besoin
+# === Chargement du modèle ===
+model = download_model()
+
+# === Classes du modèle (à respecter dans l'ordre du dataset d'entraînement)
+classes = ["led", "potentiometer", "push_button", "resistor", "ultrasonic_sensor"]
+
+# === Vérification de cohérence ===
+if model.output_shape[-1] != len(classes):
+    st.error(f"⚠️ Le modèle prédit {model.output_shape[-1]} classes, mais la liste en contient {len(classes)}.")
+    st.stop()
 
 # === Descriptions des composants ===
 descriptions = {
-    "diode": "Une diode laisse passer le courant dans un seul sens.",
-    "resistance": "Une résistance limite le courant électrique.",
-    "condensateur": "Un condensateur stocke temporairement de l'énergie."
+    "led": "Une LED est une diode électroluminescente qui émet de la lumière.",
+    "potentiometer": "Un potentiomètre permet de régler une résistance variable.",
+    "push_button": "Un bouton poussoir permet de fermer temporairement un circuit.",
+    "resistor": "Une résistance limite le courant électrique.",
+    "ultrasonic_sensor": "Un capteur à ultrasons mesure les distances grâce au son."
 }
 
 # === Interface Streamlit ===
@@ -49,7 +57,7 @@ elif image_file:
     image = Image.open(image_file)
 
 if image:
-    st.image(image, caption="Image analysée", use_column_width=True)
+    st.image(image, caption="Image analysée", use_container_width=True)
     img = image.resize((150, 150))
     img_array = img_to_array(img) / 255.0
     img_array = np.expand_dims(img_array, axis=0)
