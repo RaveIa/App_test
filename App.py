@@ -28,7 +28,7 @@ def load_my_model():
     return load_model(MODEL_PATH)
 
 model = load_my_model()
-classes = ["diode", "resistance", "condensateur"]  # à adapter si besoin
+classes = ["led", "potentiometer", "push_button","resistor","ultrasonic_sensor"]  # à adapter si besoin
 
 # === Descriptions des composants ===
 descriptions = {
