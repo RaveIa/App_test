@@ -28,15 +28,15 @@ def download_model():
 # === Chargement du modèle ===
 model = download_model()
 
-# === Classes du modèle (à respecter dans l'ordre du dataset d'entraînement)
+# === Liste des classes
 classes = ["led", "potentiometer", "push_button", "resistor", "ultrasonic_sensor"]
 
-# === Vérification de cohérence ===
+# === Vérification de cohérence
 if model.output_shape[-1] != len(classes):
-    st.error(f"⚠️ Le modèle prédit {model.output_shape[-1]} classes, mais la liste en contient {len(classes)}.")
+    st.error(f"⚠️ Le modèle retourne {model.output_shape[-1]} classes, mais la liste `classes` en a {len(classes)}.")
     st.stop()
 
-# === Descriptions des composants ===
+# === Descriptions des composants
 descriptions = {
     "led": "Une LED est une diode électroluminescente qui émet de la lumière.",
     "potentiometer": "Un potentiomètre permet de régler une résistance variable.",
@@ -45,26 +45,45 @@ descriptions = {
     "ultrasonic_sensor": "Un capteur à ultrasons mesure les distances grâce au son."
 }
 
-# === Interface Streamlit ===
-image_file = st.file_uploader("Uploader une image", type=["jpg", "png"])
-camera_file = st.camera_input("Ou prends une photo avec ta caméra")
+# === Réinitialisation via bouton
+if st.button("🔄 Réinitialiser la photo"):
+    st.session_state["camera"] = None
+    st.session_state["uploaded"] = None
+    st.experimental_rerun()
 
-# === Traitement et prédiction ===
-image = None
-if camera_file:
-    image = Image.open(camera_file)
-elif image_file:
-    image = Image.open(image_file)
+# === Formulaire d'upload et caméra
+with st.form("image_form"):
+    col1, col2 = st.columns(2)
+    with col1:
+        uploaded = st.file_uploader("Uploader une image", type=["jpg", "png"], key="uploaded")
+    with col2:
+        camera = st.camera_input("Ou prends une photo", key="camera")
+    
+    submit = st.form_submit_button("Analyser")
 
-if image:
-    st.image(image, caption="Image analysée", use_container_width=True)
-    img = image.resize((150, 150))
-    img_array = img_to_array(img) / 255.0
-    img_array = np.expand_dims(img_array, axis=0)
+# === Traitement et prédiction
+if submit:
+    image = None
+    if camera:
+        image = Image.open(camera)
+    elif uploaded:
+        image = Image.open(uploaded)
 
-    prediction = model.predict(img_array)
-    predicted_class = classes[np.argmax(prediction)]
-    confidence = float(np.max(prediction) * 100)
+    if image:
+        st.image(image, caption="Image analysée", use_container_width=True)
+        img = image.resize((150, 150))
+        img_array = img_to_array(img) / 255.0
+        img_array = np.expand_dims(img_array, axis=0)
 
-    st.success(f"Composant identifié : **{predicted_class}** ({confidence:.2f}%)")
-    st.info(f"Description : {descriptions.get(predicted_class, 'Non disponible.')}")
+        try:
+            prediction = model.predict(img_array)
+            predicted_class = classes[np.argmax(prediction)]
+            confidence = float(np.max(prediction) * 100)
+
+            st.success(f"Composant identifié : **{predicted_class}** ({confidence:.2f}%)")
+            st.info(f"Description : {descriptions.get(predicted_class, 'Non disponible.')}")
+        except Exception as e:
+            st.error("Erreur pendant la prédiction :")
+            st.code(str(e))
+    else:
+        st.warning("Aucune image fournie.")
